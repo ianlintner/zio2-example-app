@@ -15,7 +15,6 @@ object Main extends ZIOAppDefault {
     case Method.GET -> !!          => ZIO.succeed(Response.text("Hello World!"))
     case Method.GET -> !! / "json" => ZIO.succeed(Response.json("""{"greetings": "Hello World!"}"""))
     case Method.GET -> !! / "error" => {
-        val ex = new RuntimeException("Java Test Exception")
         ZIO.fail(new RuntimeException("Java Test Exception"))
           .tapErrorCause(e => ZIO.logErrorCause(message="Test ZIO Error", e)).orElseSucceed(()) &>
         ZIO.succeed(Response.text("An error was logged."))
