@@ -13,6 +13,7 @@
         <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
             <level>INFO</level>
         </filter>
+        <redirectToStdout>true</redirectToStdout>
         <log>application.log</log> <!-- Optional : default java.log -->
         <!-- <resourceType>gae_app</resourceType> Optional : default: auto-detected, fallback: global -->
         <!-- <enhancer>com.example.logging.logback.enhancers.ExampleEnhancer</enhancer> Optional -->
@@ -20,8 +21,8 @@
     </appender>
 
 
-    <root level="DEBUG">
+    <root level="INFO">
         <appender-ref ref="CLOUD" />
-        <appender-ref ref="STDOUT" />
+        <!--<appender-ref ref="STDOUT" />-->
     </root>
 </configuration>

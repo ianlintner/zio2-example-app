@@ -3,17 +3,25 @@ package example
 import zhttp.http._
 import zhttp.service.Server
 import zio._
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
+import zio.logging.backend.SLF4J
 
 object Main extends ZIOAppDefault {
   val port: Int = 8080
+  val logger: Logger = LoggerFactory.getLogger("Main")
+  private val loglayer: ZLayer[Any, Nothing, Unit] = Runtime.removeDefaultLoggers >>> SLF4J.slf4j
+
 
   // Create HTTP route
   val app:  Http[Any, Nothing, Request, Response]  = Http.collectZIO[Request] {
     case Method.GET -> !!          => ZIO.succeed(Response.text("Hello World!"))
     case Method.GET -> !! / "json" => ZIO.succeed(Response.json("""{"greetings": "Hello World!"}"""))
-    case Method.GET -> !! / "error" =>
-      ZIO.logErrorCause(message = "Example Error", cause = Cause.fail( new RuntimeException("Test"))) &>
-      ZIO.succeed(Response.text("An error was logged."))
+    case Method.GET -> !! / "error" => {
+        logger.error("Test error sl4j", new RuntimeException("Test"))
+        ZIO.logErrorCause(message = "Example Error", cause = Cause.fail(new RuntimeException("Test"))) &>
+        ZIO.succeed(Response.text("An error was logged."))
+    }.provideLayer(loglayer)
   }
 
   // Run it like any simple app
