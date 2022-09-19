@@ -3,13 +3,10 @@ package example
 import zhttp.http._
 import zhttp.service.Server
 import zio._
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import zio.logging.backend.SLF4J
 
 object Main extends ZIOAppDefault {
   val port: Int = 8080
-  val logger: Logger = LoggerFactory.getLogger("Main")
   private val loglayer: ZLayer[Any, Nothing, Unit] = Runtime.removeDefaultLoggers >>> SLF4J.slf4j
 
 
@@ -18,8 +15,9 @@ object Main extends ZIOAppDefault {
     case Method.GET -> !!          => ZIO.succeed(Response.text("Hello World!"))
     case Method.GET -> !! / "json" => ZIO.succeed(Response.json("""{"greetings": "Hello World!"}"""))
     case Method.GET -> !! / "error" => {
-        logger.error("Test error sl4j", new RuntimeException("Test"))
-        ZIO.logErrorCause(message = "Example Error", cause = Cause.fail(new RuntimeException("Test"))) &>
+        val ex = new RuntimeException("Java Test Exception")
+        ZIO.fail(new RuntimeException("Java Test Exception"))
+          .tapErrorCause(e => ZIO.logErrorCause(message="Test ZIO Error", e)).orElseSucceed(()) &>
         ZIO.succeed(Response.text("An error was logged."))
     }.provideLayer(loglayer)
   }
