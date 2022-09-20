@@ -1,5 +1,7 @@
 package example
 
+import example.observability.LogAspect
+import example.observability.LogAspect.logAnnotateCorrelationId
 import zhttp.http._
 import zhttp.service.Server
 import zio._
@@ -14,9 +16,11 @@ object Main extends ZIOAppDefault {
   val app:  Http[Any, Nothing, Request, Response]  = Http.collectZIO[Request] {
     case Method.GET -> !!          => ZIO.succeed(Response.text("Hello World!"))
     case Method.GET -> !! / "json" => ZIO.succeed(Response.json("""{"greetings": "Hello World!"}"""))
-    case Method.GET -> !! / "error" => {
+    case req@Method.GET -> !! / "error" => {
         ZIO.fail(new RuntimeException("Java Test Exception"))
-          .tapErrorCause(e => ZIO.logErrorCause(message="Test ZIO Error", e)).orElseSucceed(()) &>
+          .tapErrorCause(e =>
+            ZIO.logErrorCause(message="Test ZIO Error", e) @@ LogAspect.logAnnotateCorrelationId(req)
+          ).orElseSucceed(()) &>
         ZIO.succeed(Response.text("An error was logged."))
     }.provideLayer(loglayer)
   }
